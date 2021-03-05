@@ -1,7 +1,4 @@
-/* -- first.S */
-/* COMMENTING LIKE THIS */ 
-
-//or like this 
+/* Project 1  */
 
 
 .global main 
@@ -24,7 +21,10 @@
  	word_read: .skip 12
     
 .balign 1
-    word_read2: .skip 12 
+    word_read2: .skip 12
+    
+.balign 1
+    cat: .skip 24 
 
 .balign 4
     return: .word 0
@@ -53,7 +53,7 @@ main:
     ldr r1, addr_of_word_read2
     bl scanf
     
-    //print out both words
+    //print to output
     ldr r0, addr_of_printf_msg
     ldr r1, addr_of_word_read
     ldr r2, addr_of_word_read2
@@ -72,6 +72,7 @@ addr_of_scanf_msg2: .word scanf_msg2
 addr_of_scan_pattern:  .word scan_pattern
 addr_of_word_read: .word word_read
 addr_of_word_read2: .word word_read2
+addr_of_cat: .word cat
 addr_of_return: .word return 
 
 
