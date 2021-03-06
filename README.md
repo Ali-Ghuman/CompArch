@@ -1,6 +1,6 @@
 # CompArch
 
-
+## Fri Mar 5
 So far, I made it take in two strings and print out both of them
 
 it still kind of bugs out when its too big though
@@ -11,7 +11,7 @@ and know if its too large
 
 Make file works, use command "make all" and then run ./a.out 
 
-
+## Sat Mar 6
 Okay so, i think i got it working to check for 13 characters. 
 I changed the input to fgets to 14 characters, so it cuts off 
 at 13 and the thirteenth will be the null terminator
