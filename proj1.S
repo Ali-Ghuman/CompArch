@@ -40,33 +40,39 @@ main:
     ldr r1, addr_of_return    
     str lr, [r1]
     
+   //set up counter and newline to check against 
+    mov r9, #0
+    ldr r6, addr_of_newline
+    ldr r6, [r6]
+
     //promp user with first message
     ldr r0, addr_of_input
     bl printf    
-    
+   
+    bl read_input 
+
+read_input: 
+    //use c function fgets to read in input of length 14 
     ldr r0, addr_of_word_read
     mov r1, #14
     ldr r3, addr_of_stdin
     ldr r2, [r3] 
     bl fgets
-    
-    mov r9, #0
-    ldr r6, addr_of_newline
-    ldr r6, [r6]
-    b loop
+    b loop1
 
-loop:
+loop1: //loop through string and add it to array while checking bounds
     cmp r9, #13
     beq error
     ldr r1, addr_of_concat
     ldr r2, addr_of_word_read
     ldrb r5, [r2, r9]
     strb r5, [r1, r9]
-    add r9, r9, #1
     ldrb r3, [r2,r9]
     cmp r3, r6
     beq end
-    b loop
+    add r9, r9, #1
+    b loop1
+
 end: 
     ldr r0, addr_of_printf_msg
     bl printf
