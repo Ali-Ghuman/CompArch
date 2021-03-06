@@ -67,8 +67,7 @@ loop1: //loop through string and add it to array while checking bounds
     ldr r2, addr_of_word_read
     ldrb r5, [r2, r9]
     strb r5, [r1, r9]
-    ldrb r3, [r2,r9]
-    cmp r3, r6
+    cmp r5, r6
     beq end
     add r9, r9, #1
     b loop1
