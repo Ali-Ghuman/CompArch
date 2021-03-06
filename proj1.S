@@ -51,13 +51,12 @@ main:
     ldr r6, addr_of_newline
     ldr r6, [r6]
 
-    //promp user with first message
-    ldr r0, addr_of_input
-    bl printf    
-   
     bl read_input 
 
 read_input: 
+    //promp user with first message
+    ldr r0, addr_of_input
+    bl printf    
     //use c function fgets to read in input of length 14 
     ldr r0, addr_of_word_read
     mov r1, #14
@@ -67,12 +66,15 @@ read_input:
     b loop1
 
 read_input2: 
+    ldr r0, addr_of_input2
+    bl printf    
+
     ldr r0, addr_of_word_read2
     mov r1, #14
     ldr r3, addr_of_stdin
     ldr r2, [r3] 
     bl fgets
-    b loop2
+    b buffer
 
 loop1: //loop through string and add it to array while checking bounds
     cmp r9, #13
@@ -82,12 +84,12 @@ loop1: //loop through string and add it to array while checking bounds
     ldrb r5, [r2, r9]
     strb r5, [r1, r9]
     cmp r5, r6
-    beq buffer 
+    beq read_input2 
     add r9, r9, #1
     b loop1
 
 buffer: 
-    sub r9, r9, #1
+    sub r9, r9, #2
     mov r7, #0
     b loop2
     
@@ -143,4 +145,4 @@ addr_of_error_msg: .word error_msg
 addr_of_error_msg2: .word error_msg2
 addr_of_null: .word null
 .global printf 
-.global getchar
+.global fgets 
