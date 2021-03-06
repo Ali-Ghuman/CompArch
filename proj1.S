@@ -23,14 +23,17 @@
 .balign 1
     word_read2: .skip 12
     
-.balign 8
+.balign 1
     cat: .skip 24 
 
 .balign 4
     return: .word 0
 
 .balign 4
-    new_line: .asciz "\0"
+    null: .asciz "\0"
+
+.balign 4
+    new_line: .asciz "\n"
 
 .balign 4
     error_msg: .asciz "Error Code 7: Program Exited \n"
@@ -47,29 +50,19 @@ main:
     bl printf    
     
     ldr r0, addr_of_word_read
-    mov r1, #13
+    mov r1, #14
     ldr r3, addr_of_standard
     ldr r2, [r3] 
     bl fgets
     
     mov r9, #0
-    ldr r4, addr_of_newline
-    ldrb r4, [r4]
+    ldr r4, addr_of_null
+    ldr r4, [r4]
+    ldr r6, addr_of_newline
+    ldr r6, [r6]
     b loop
-    
-    ldr r0, addr_of_printf_msg
-    ldr r1, addr_of_word_read
-    bl printf
-
-
-    ldr lr, addr_of_return
-    ldr lr, [lr]
-	bx lr   
-
 
 loop:
-    cmp r9, #13
-    bgt error
     ldr r1, addr_of_cat
     ldr r2, addr_of_word_read
     ldrb r5, [r2, r9]
@@ -78,10 +71,12 @@ loop:
     ldrb r3, [r2,r9]
     cmp r3, r4
     beq end   
+    cmp r3, r6
+    beq end
     b loop
 end: 
-    //cmp r9, #12
-    //bgt error
+    cmp r9, #13
+    beq error
     ldr r0, addr_of_printf_msg
     bl printf
     ldr lr, addr_of_return
@@ -106,6 +101,7 @@ addr_of_standard: .word stdin
 addr_of_return: .word return 
 addr_of_newline: .word new_line
 addr_of_error: .word error_msg
+addr_of_null: .word null
 
 
 .global printf 

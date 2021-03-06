@@ -10,3 +10,14 @@ so that it cuts off after 13 input chars. We can check that
 and know if its too large
 
 Make file works, use command "make all" and then run ./a.out 
+
+
+Okay so, i think i got it working to check for 13 characters. 
+I changed the input to fgets to 14 characters, so it cuts off 
+at 13 and the thirteenth will be the null terminator
+
+Then our conditional checks if r9 is equal to 13 and gives an error if it is 
+(meaning we went out of bounds into 12)
+
+I also added a conditional to check if we hit the newline character (so that if the 
+string is < 12 it wont include the newline in the string)
