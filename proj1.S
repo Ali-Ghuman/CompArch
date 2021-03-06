@@ -12,22 +12,30 @@
     scanf_msg2: .asciz "Enter a second string: "
 
 .balign 4
-	printf_msg: .asciz "You typed the words: \n%s %s\n" 
+	printf_msg: .asciz "You typed the words:\n%s\n" 
 
 .balign 4
-	scan_pattern: .asciz "%13s" 
+	scan_pattern: .asciz "%s" 
 
 .balign 1
- 	word_read: .skip 12
+ 	word_read: .skip 14
     
 .balign 1
     word_read2: .skip 12
     
-.balign 1
+.balign 8
     cat: .skip 24 
 
 .balign 4
     return: .word 0
+
+.balign 4
+    new_line: .asciz "\0"
+
+.balign 4
+    error_msg: .asciz "Error Code 7: Program Exited \n"
+
+.text
 
 main: 
     //store the link register in addr_of_return
@@ -38,33 +46,54 @@ main:
     ldr r0, addr_of_scanf_msg
     bl printf    
     
-
-    //take the user input and store in word_read
-    ldr r0, addr_of_scan_pattern
-    ldr r1, addr_of_word_read
-    bl scanf
-
-    //prompt user for the second message
-    ldr r0, addr_of_scanf_msg2
-    bl printf
-
-    //store user input in word_read2
-    ldr r0, addr_of_scan_pattern
-    ldr r1, addr_of_word_read2
-    bl scanf
+    ldr r0, addr_of_word_read
+    mov r1, #13
+    ldr r3, addr_of_standard
+    ldr r2, [r3] 
+    bl fgets
     
-    //print to output
+    mov r9, #0
+    ldr r4, addr_of_newline
+    ldrb r4, [r4]
+    b loop
+    
     ldr r0, addr_of_printf_msg
     ldr r1, addr_of_word_read
-    ldr r2, addr_of_word_read2
     bl printf
 
 
     ldr lr, addr_of_return
     ldr lr, [lr]
-	bx lr 
+	bx lr   
 
 
+loop:
+    cmp r9, #13
+    bgt error
+    ldr r1, addr_of_cat
+    ldr r2, addr_of_word_read
+    ldrb r5, [r2, r9]
+    strb r5, [r1, r9]
+    add r9, r9, #1
+    ldrb r3, [r2,r9]
+    cmp r3, r4
+    beq end   
+    b loop
+end: 
+    //cmp r9, #12
+    //bgt error
+    ldr r0, addr_of_printf_msg
+    bl printf
+    ldr lr, addr_of_return
+    ldr lr, [lr]
+    bx lr
+
+error:
+    ldr r0, addr_of_error
+    bl printf
+    ldr lr, addr_of_return
+    ldr lr, [lr]
+    bx lr
 
 addr_of_printf_msg: .word printf_msg
 addr_of_scanf_msg: .word scanf_msg
@@ -73,9 +102,11 @@ addr_of_scan_pattern:  .word scan_pattern
 addr_of_word_read: .word word_read
 addr_of_word_read2: .word word_read2
 addr_of_cat: .word cat
+addr_of_standard: .word stdin
 addr_of_return: .word return 
-
+addr_of_newline: .word new_line
+addr_of_error: .word error_msg
 
 
 .global printf 
-.global scanf
+.global getchar
