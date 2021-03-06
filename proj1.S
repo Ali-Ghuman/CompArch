@@ -7,22 +7,22 @@
 .data 
 
 .balign 4 
-	input1: .asciz "Enter a string for a test: " 
+    input1: .asciz "Enter a string for a test: " 
 
 .balign 4
     input2: .asciz "Enter a second string: "
 
 .balign 4
-	printf_msg: .asciz "You typed the words:\n%s\n" 
+	printf_msg: .asciz "You typed the words:\n%s\nWith Length: %d\n" 
     
 .balign 1
     word_read: .skip 14
     
 .balign 1
-    word_read2: .skip 12
+    word_read2: .skip 14
     
 .balign 1
-    concatenated: .skip 24 
+    concatenated: .skip 25 
 
 .balign 4
     return: .word 0
@@ -31,7 +31,13 @@
     newline: .asciz "\n"
 
 .balign 4
+    null: .asciz "\0"
+
+.balign 4
     error_msg: .asciz "Error Code 7: Program Exited\n"
+
+.balign 4
+    error_msg2: .asciz "Error Code 8: Program Exited\n"
 
 .text
 
@@ -60,6 +66,14 @@ read_input:
     bl fgets
     b loop1
 
+read_input2: 
+    ldr r0, addr_of_word_read2
+    mov r1, #14
+    ldr r3, addr_of_stdin
+    ldr r2, [r3] 
+    bl fgets
+    b loop2
+
 loop1: //loop through string and add it to array while checking bounds
     cmp r9, #13
     beq error
@@ -68,11 +82,34 @@ loop1: //loop through string and add it to array while checking bounds
     ldrb r5, [r2, r9]
     strb r5, [r1, r9]
     cmp r5, r6
-    beq end
+    beq buffer 
     add r9, r9, #1
     b loop1
 
+buffer: 
+    sub r9, r9, #1
+    mov r7, #0
+    b loop2
+    
+loop2: 
+    cmp r7, #13
+    beq error2
+    ldr r1, addr_of_concat
+    ldr r2, addr_of_word_read2
+    ldrb r5, [r2, r7]
+    strb r5, [r1, r9]
+    cmp r5, r6
+    beq end 
+    add r9, r9, #1
+    add r7, r7, #1
+    b loop2
+
 end: 
+    ldr r8, addr_of_null
+    ldrb r8, [r8]
+    strb r8,  [r1, #24]
+    mov r2, r9
+    ldr r2, [r2]
     ldr r0, addr_of_printf_msg
     bl printf
     ldr lr, addr_of_return
@@ -86,6 +123,13 @@ error:
     ldr lr, [lr]
     bx lr
 
+error2:
+    ldr r0, addr_of_error_msg2
+    bl printf
+    ldr lr, addr_of_return
+    ldr lr, [lr]
+    bx lr
+    
 addr_of_printf_msg: .word printf_msg
 addr_of_input: .word input1
 addr_of_input2: .word input2
@@ -96,7 +140,7 @@ addr_of_stdin: .word stdin
 addr_of_return: .word return 
 addr_of_newline: .word newline
 addr_of_error_msg: .word error_msg
-
-
+addr_of_error_msg2: .word error_msg2
+addr_of_null: .word null
 .global printf 
 .global getchar
