@@ -112,7 +112,7 @@ end:
     mov r2, r9
     bl printf
 
-    
+    mov r0, r9 
     ldr lr, addr_of_return
     ldr lr, [lr]
     bx lr
@@ -120,6 +120,7 @@ end:
 error:
     ldr r0, addr_of_error_msg
     bl printf
+    mov r0, #7
     ldr lr, addr_of_return
     ldr lr, [lr]
     bx lr
@@ -127,6 +128,7 @@ error:
 error2:
     ldr r0, addr_of_error_msg2
     bl printf
+    mov r0, #8
     ldr lr, addr_of_return
     ldr lr, [lr]
     bx lr
