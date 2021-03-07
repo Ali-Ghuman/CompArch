@@ -13,7 +13,7 @@
     input2: .asciz "Enter a second string: "
 
 .balign 4
-	printf_msg: .asciz "You typed the words:\n%s\nLength: %d\n" 
+	printf_msg: .asciz "You typed the words:\n%s\n" 
     
 .balign 1
     word_read: .skip 14
@@ -30,15 +30,6 @@
 .balign 4
     newline: .asciz "\n"
 
-.balign 4
-    null: .asciz "\0"
-
-.balign 4
-    error_msg: .asciz "Error Code 7: Program Exited\n"
-
-.balign 4
-    error_msg2: .asciz "Error Code 8: Program Exited\n"
-
 .text
 
 main: 
@@ -48,13 +39,14 @@ main:
     
    //set up counter and newline to check against 
     mov r9, #0
+    mov r7, #0
     ldr r6, addr_of_newline
     ldr r6, [r6]
 
     bl read_input 
 
 read_input: 
-    //promp user with first message
+    //prompt user with first message
     ldr r0, addr_of_input
     bl printf    
     //use c function fgets to read in input of length 14 
@@ -65,35 +57,31 @@ read_input:
     bl fgets
     b loop1
 
-read_input2: 
+read_input2: //read second input string  
     ldr r0, addr_of_input2
     bl printf    
-
+    
     ldr r0, addr_of_word_read2
     mov r1, #14
     ldr r3, addr_of_stdin
     ldr r2, [r3] 
     bl fgets
-    b buffer
+    b loop2
 
-loop1: //loop through string and add it to array while checking bounds
+loop1: //increments through the input string until new line and stores into array
     cmp r9, #13
     beq error
     ldr r1, addr_of_concat
     ldr r2, addr_of_word_read
     ldrb r5, [r2, r9]
-    cmp r5, r6
+    cmp r5, r6                //compare newline with value at the index r9 of r2 
     beq read_input2
-    strb r5, [r1, r9]
+    strb r5, [r1, r9]  
     add r9, r9, #1
     b loop1
 
-buffer: 
-    mov r7, #0
-    
-    b loop2
-
-loop2: 
+loop2: //stores values of second string using counter r7 and continues the concatenation
+       //after the first string is stored using counter r9
     cmp r7, #13
     beq error2
     ldr r1, addr_of_concat
@@ -106,9 +94,8 @@ loop2:
     add r7, r7, #1
     b loop2
 
-end: 
+end: //if the newline char is before the 14th element in the string array  
     ldr r0, addr_of_printf_msg
-    mov r2, r9
     bl printf
 
     mov r0, r9 
@@ -116,17 +103,13 @@ end:
     ldr lr, [lr]
     bx lr
 
-error:
-    ldr r0, addr_of_error_msg
-    bl printf
+error: //if the newline char is not within the first 13 elements in the first string array 
     mov r0, #7
     ldr lr, addr_of_return
     ldr lr, [lr]
     bx lr
 
-error2:
-    ldr r0, addr_of_error_msg2
-    bl printf
+error2: //error for the second string array
     mov r0, #8
     ldr lr, addr_of_return
     ldr lr, [lr]
@@ -141,9 +124,7 @@ addr_of_concat: .word concatenated
 addr_of_stdin: .word stdin
 addr_of_return: .word return 
 addr_of_newline: .word newline
-addr_of_error_msg: .word error_msg
-addr_of_error_msg2: .word error_msg2
-addr_of_null: .word null
+
 .global printf 
 .global fgets 
 
