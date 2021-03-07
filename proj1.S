@@ -13,7 +13,7 @@
     input2: .asciz "Enter a second string: "
 
 .balign 4
-	printf_msg: .asciz "You typed the words:\n%s\nWith Length: %d\n" 
+	printf_msg: .asciz "You typed the words:\n%s\nLength: %d\n" 
     
 .balign 1
     word_read: .skip 14
@@ -22,7 +22,7 @@
     word_read2: .skip 14
     
 .balign 1
-    concatenated: .skip 25 
+    concatenated: .skip 25
 
 .balign 4
     return: .word 0
@@ -82,38 +82,37 @@ loop1: //loop through string and add it to array while checking bounds
     ldr r1, addr_of_concat
     ldr r2, addr_of_word_read
     ldrb r5, [r2, r9]
-    strb r5, [r1, r9]
     cmp r5, r6
-    beq read_input2 
+    beq read_input2
+    strb r5, [r1, r9]
     add r9, r9, #1
     b loop1
 
 buffer: 
-    sub r9, r9, #2
     mov r7, #0
-    b loop2
     
+    b loop2
+
 loop2: 
     cmp r7, #13
     beq error2
     ldr r1, addr_of_concat
     ldr r2, addr_of_word_read2
     ldrb r5, [r2, r7]
-    strb r5, [r1, r9]
     cmp r5, r6
     beq end 
+    strb r5, [r1, r9]
     add r9, r9, #1
     add r7, r7, #1
     b loop2
 
 end: 
-    ldr r8, addr_of_null
-    ldrb r8, [r8]
-    strb r8,  [r1, #24]
-    mov r2, r9
-    ldr r2, [r2]
     ldr r0, addr_of_printf_msg
+    ldr r1, addr_of_concat
+    mov r2, r9
     bl printf
+
+    
     ldr lr, addr_of_return
     ldr lr, [lr]
     bx lr
@@ -146,3 +145,5 @@ addr_of_error_msg2: .word error_msg2
 addr_of_null: .word null
 .global printf 
 .global fgets 
+
+
