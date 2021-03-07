@@ -22,7 +22,7 @@
     word_read2: .skip 14
     
 .balign 1
-    concatenated: .skip 25
+    concatenated: .skip 24
 
 .balign 4
     return: .word 0
@@ -108,7 +108,6 @@ loop2:
 
 end: 
     ldr r0, addr_of_printf_msg
-    ldr r1, addr_of_concat
     mov r2, r9
     bl printf
 
