@@ -13,7 +13,7 @@
     input2: .asciz "Enter a second string: "
 
 .balign 4
-	printf_msg: .asciz "You typed the words:\n%s\n" 
+    printf_msg: .asciz "You typed the words:\n%s\n" 
     
 .balign 1
     word_read: .skip 14
