@@ -21,3 +21,7 @@ Then our conditional checks if r9 is equal to 13 and gives an error if it is
 
 I also added a conditional to check if we hit the newline character (so that if the 
 string is < 12 it wont include the newline in the string)
+
+Fixed redundancies and separated parts of code to make more organized. 
+Fixed error messages so that $? gives the appropriate message. 
+Added loop2 which loops through the second string and concatenates it to the first
