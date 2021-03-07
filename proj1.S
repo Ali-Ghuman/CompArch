@@ -37,7 +37,7 @@ main:
     ldr r1, addr_of_return    
     str lr, [r1]
     
-   //set up counter and newline to check against 
+   //set up counters and newline 
     mov r9, #0
     mov r7, #0
     ldr r6, addr_of_newline
@@ -74,7 +74,7 @@ loop1: //increments through the input string until new line and stores into arra
     ldr r1, addr_of_concat
     ldr r2, addr_of_word_read
     ldrb r5, [r2, r9]
-    cmp r5, r6                //compare newline with value at the index r9 of r2 
+    cmp r5, r6                //compare newline with value at the index r9 of r2
     beq read_input2
     strb r5, [r1, r9]  
     add r9, r9, #1
@@ -103,13 +103,13 @@ end: //if the newline char is before the 14th element in the string array
     ldr lr, [lr]
     bx lr
 
-error: //if the newline char is not within the first 13 elements in the first string array 
+error: //if newline char is not in first 13 elements of string array 
     mov r0, #7
     ldr lr, addr_of_return
     ldr lr, [lr]
     bx lr
 
-error2: //error for the second string array
+error2: //if newline char is not in first 13 elements of string array
     mov r0, #8
     ldr lr, addr_of_return
     ldr lr, [lr]
