@@ -25,7 +25,7 @@
     word_read2: .skip 14
     
 .balign 1
-    concatenated: .skip 24
+    concatenated: .skip 25
 
 .balign 4
     return: .word 0
