@@ -14,6 +14,9 @@
 
 .balign 4
     printf_msg: .asciz "You typed the words:\n%s\n" 
+
+.balign 4
+    errormsg: .asciz "Error: 12 Character Limit Exceeded\n"
     
 .balign 1
     word_read: .skip 14
@@ -104,12 +107,18 @@ end: //if the newline char is before the 14th element in the string array
     bx lr
 
 error: //if newline char is not in first 13 elements of string array 
+    ldr r0, addr_of_errormsg
+    bl printf
+
     mov r0, #7
     ldr lr, addr_of_return
     ldr lr, [lr]
     bx lr
 
 error2: //if newline char is not in first 13 elements of string array
+    ldr r0, addr_of_errormsg
+    bl printf
+
     mov r0, #8
     ldr lr, addr_of_return
     ldr lr, [lr]
@@ -124,6 +133,7 @@ addr_of_concat: .word concatenated
 addr_of_stdin: .word stdin
 addr_of_return: .word return 
 addr_of_newline: .word newline
+addr_of_errormsg: .word errormsg
 
 .global printf 
 .global fgets 
