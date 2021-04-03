@@ -30,7 +30,7 @@ lengthError:
 
 .balign 4
 nameError:
-     .asciz "ERROR: *Your file name should be in.txt in the current directory!*\n" //error message for wrong name 
+     .asciz "ERROR: *Your file name should be 'in.txt' in the current directory!*\n" //error message for wrong name 
 
 .text
 
