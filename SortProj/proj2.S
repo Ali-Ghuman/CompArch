@@ -67,6 +67,7 @@ read_inputFile:
     cmp r0, #0 //if equal, means we're not at the EOF so we continute
     beq read_inputFile
 
+    sub r5, r5, #4 //when reading in input, r5 goes beyond the file length by 4 bytes, so we subtract it off
 	b intialize_sort 
 
 intialize_sort:
@@ -112,6 +113,7 @@ swap_sort: //swapping values in the array after getting the minimum value in one
 	
 	b iterate_sort 
 
+
 set_up_outputFile: //branch to this when sorting is completed
     ldr r0, addr_of_outFile //load in address of output file out.txt
     ldr r1, addr_of_write //load in w for write 
@@ -120,7 +122,6 @@ set_up_outputFile: //branch to this when sorting is completed
     mov r13, r0 //move the file pointer of out.txt into r13
     ldr r8, addr_of_array //laod address of sorted input into r8
     mov r6, #0  //set up iterator to determine if we're finished outputting
-    sub r5, r5, #4 //when reading in input, r5 goes beyond the file length by 4 bytes, so we subtract it off
     b write_outputFile
    
 write_outputFile:
