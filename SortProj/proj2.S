@@ -30,7 +30,7 @@ lengthError:
 
 .balign 4
 nameError:
-     .asciz "ERROR: *Your file name should be 'in.txt' in the current directory!*\n" //error message for wrong name 
+    .asciz "ERROR: *Your file name should be 'in.txt' in the current directory!*\n" //error message for wrong name 
 
 .text
 
@@ -68,51 +68,51 @@ read_inputFile:
     beq read_inputFile
 
     sub r5, r5, #4 //when reading in input, r5 goes beyond the file length by 4 bytes, so we subtract it off
-	b intialize_sort 
+
+    b intialize_sort 
 
 intialize_sort:
-	mov r2, #0 //r2 = current element index 
-	mov r3, #0 //r3 = current minimum index 
-	mov r6, #0 //r6 = iteration number 
-	sub r4, r5, #4 //r4 = last array index in bytes (array size - 4 bytes) 
+    mov r2, #0 //r2 = current element index 
+    mov r3, #0 //r3 = current minimum index 
+    mov r6, #0 //r6 = iteration number 
+    sub r4, r5, #4 //r4 = last array index in bytes (array size - 4 bytes) 
 	
-	b iterate_sort
+    b iterate_sort
 
 iterate_sort: //iterate through the array many times until sorted 
-	cmp r5, r6, LSL #2 //compare if the iteration number = # of iterations needed (= array size) 
-	beq set_up_outputFile 
+    cmp r5, r6, LSL #2 //compare if the iteration number = # of iterations needed (= array size) 
+    beq set_up_outputFile 
 
-	add r6, r6, #1 //the start of the new iteration 
-	sub r2, r6, #1 //starting index of first iteration = 0th element (always 1 element less)
+    add r6, r6, #1 //the start of the new iteration 
+    sub r2, r6, #1 //starting index of first iteration = 0th element (always 1 element less)
 	
-	mov r3, r2 //setting the current element index as current minimum index 
+    mov r3, r2 //setting the current element index as current minimum index 
 
-	b loop_sort 
+    b loop_sort 
  
 loop_sort: //incrementing through the array elements 
-	cmp r4, r2, LSL #2 //if current element is last element of array, go to swap_sort
-	beq swap_sort 
+    cmp r4, r2, LSL #2 //if current element is last element of array, go to swap_sort
+    beq swap_sort 
 
-	add r2, r2, #1 //increment index counter 
+    add r2, r2, #1 //increment index counter 
 	
-	ldr r9, [r8, r2, LSL #2] //current element value in array
-	ldr r10, [r8, r3, LSL #2] //current minimum value
-	cmp r9, r10 //if current element < current minimum, overwrite the current minimum index 
-	movlt r3, r2 
+    ldr r9, [r8, r2, LSL #2] //current element value in array
+    ldr r10, [r8, r3, LSL #2] //current minimum value
+    cmp r9, r10 //if current element < current minimum, overwrite the current minimum index 
+    movlt r3, r2 
 
-	b loop_sort
+    b loop_sort
 
 swap_sort: //swapping values in the array after getting the minimum value in one iteration
-	sub r7, r6, #1 //subtracting iteration number by 1 to get the index that should be replaced
+    sub r7, r6, #1 //subtracting iteration number by 1 to get the index that should be replaced
 	
-	ldr r9, [r8, r3, LSL #2]
-	ldr r10, [r8, r7, LSL #2] 
+    ldr r9, [r8, r3, LSL #2]
+    ldr r10, [r8, r7, LSL #2] 
 
-	str r10, [r8, r3, LSL #2] 
-	str r9, [r8, r7, LSL #2] 	
+    str r10, [r8, r3, LSL #2] 
+    str r9, [r8, r7, LSL #2] 	
 	
-	b iterate_sort 
-
+    b iterate_sort 
 
 set_up_outputFile: //branch to this when sorting is completed
     ldr r0, addr_of_outFile //load in address of output file out.txt
@@ -139,25 +139,25 @@ end:
     mov r0, #0 //return 0 for success
     ldr lr, addr_of_return //retrieve lr
     ldr lr, [lr]
-	bx lr 
+    bx lr 
 
 name_error: 
-	ldr r0, addr_of_nameError //load in the address of the nameError statement
-	bl printf //print the error to terminal
-	mov r0, #2 // error value of 2				
+    ldr r0, addr_of_nameError //load in the address of the nameError statement
+    bl printf //print the error to terminal
+    mov r0, #2 // error value of 2				
 
     ldr lr, addr_of_return  
     ldr lr, [lr]
-	bx lr 
+    bx lr 
 
 length_error: 
-	ldr r0, addr_of_lengthError //load in the address of the lengthError statement
-	bl printf //print error to terminal
-	mov r0, #1 	//return error code of 1		
+    ldr r0, addr_of_lengthError //load in the address of the lengthError statement
+    bl printf //print error to terminal
+    mov r0, #1 	//return error code of 1		
 
     ldr lr, addr_of_return
     ldr lr, [lr]
-	bx lr 
+    bx lr 
 
 
 addr_of_return: .word return 
