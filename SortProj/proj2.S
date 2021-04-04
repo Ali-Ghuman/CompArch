@@ -72,8 +72,6 @@ read_inputFile:
     b intialize_sort 
 
 intialize_sort:
-    mov r2, #0 //r2 = current element index 
-    mov r3, #0 //r3 = current minimum index 
     mov r6, #0 //r6 = iteration number 
     sub r4, r5, #4 //r4 = last array index in bytes (array size - 4 bytes) 
 	
@@ -84,9 +82,9 @@ iterate_sort: //iterate through the array many times until sorted
     beq set_up_outputFile 
 
     add r6, r6, #1 //the start of the new iteration 
-    sub r2, r6, #1 //starting index of first iteration = 0th element (always 1 element less)
+    sub r2, r6, #1 //r2 = current element index, set to 1 less than iteration # at start of iteration
 	
-    mov r3, r2 //setting the current element index as current minimum index 
+    mov r3, r2 //setting the current element index as r3 = current minimum index 
 
     b loop_sort 
  
