@@ -157,7 +157,6 @@ length_error:
     ldr lr, [lr]
     bx lr 
 
-
 addr_of_return: .word return 
 addr_of_array: .word array
 addr_of_number_in: .word number_in
