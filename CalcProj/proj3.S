@@ -6,11 +6,35 @@
 .balign 4
     lengthError: .asciz "ERROR: *Input length limit exceeded*\n" //error for later on i guess
 
-.balign 4
-    input: .skip 100 //used 100 here for now
+.balign 1
+    input: .skip 50 //used 50 here for now
+
+.balign 1 
+    postfix: .skip 19 // 19 is the max number of chars, including any possible decimal points
 
 .balign 4
-    null: .asciz "\0" 
+    null: .asciz "\0"
+
+.balign 4 
+    left: .ascii "("
+
+.balign 4 
+    right: .ascii ")"
+
+.balign 4 
+    exponent: .ascii "^"
+
+.balign 4 
+    mul: .ascii "*"
+
+.balign 4 
+    div: .ascii "/"
+
+.balign 4 
+    add: .ascii "+" 
+
+.balign 4 
+    sub: .ascii "-" 
 
 .balign 4
     printPattern: .asciz "%s\n" //for outputting
@@ -32,21 +56,206 @@ main:
     ldr r1, [r1, #4]
     bl printf
 
+initialize_loop: //i separated this from main bc i overwrite r5 and r8
     ldr r10, addr_of_null //null to check for end of string
     ldr r10, [r10]
     mov r5, #0 //set up iterator to put into array
     ldr r8, addr_of_input
 
-loop: #store into array 
+    b loop 
+ 
+loop: //store into array 
     ldrb r9, [r6, r5]  //r9 = argv[r5]
     strb r9, [r8, r5]  //input[r5] = r9
     cmp r9, r10 //if null, end
-    beq end
+    beq initialize_postfix  
     
     add r5, r5, #1 //update iterator
     b loop
 
-end: 
+//
+//Converting from infix to postfix
+
+initialize_postfix:
+    mov r9, #0 //index of infix
+    mov r3, #0 //index of postfix 
+
+    push {r10}//push null onto stack as a marker for checking when the stack is empty 
+    pop {r2} 
+
+    b read_exp 
+
+read_exp:
+    ldrb r5, [r8, r9] //load the next element from infix
+    cmp r5, r10 //if it is the null char, go to empty_stack 
+    beq empty_stack 
+
+    //check if char is a left parenthesis 
+    ldr r4, addr_of_left 
+    ldr r4, [r4] //load left parenthesiss char into r4
+    cmp r5, r4
+    beq left_parenthesis//branch to left_parenthesis if comparison is equal
+
+    //check if char is a right parenthesis 
+    ldr r4, addr_of_right 
+    ldr r4, [r4] //overwrite r4 with the new char we are checking 
+    cmp r5, r4 
+    beq right_parenthesis//(right_parenthesis) 
+
+    //check if char is a carrot (for exponent) 
+    ldr r4, addr_of_exponent 
+    ldr r4, [r4] 
+    cmp r5, r4 
+    pusheq {r5} //always push the carrot  
+    b read_exp 
+
+    //check if char is "*" (for multiplication) 
+    ldr r4, addr_of_mul 
+    ldr r4, [r4] 
+    cmp r5, r4 
+    beq mul_div
+
+    //check if char is "/" ( division) 
+    ldr r4, addr_of_div 
+    ldr r4, [r4]
+    cmp r5, r4 
+    beq mul_div //for "*" and "/", branch to mul_div (same precendence)
+
+    //check if char is "+" (addition) 
+    ldr r4, addr_of_add
+    ldr r4, [r4] 
+    cmp r5, r4 
+    beq add_sub  
+
+    //check if char is "-" (subtraction) 
+    ldr r4, addr_of_sub 
+    ldr r4, [r4] 
+    cmp r5, r4
+    beq add_sub //addition and subtraction have the same precendence 
+
+    ldr r2, addr_of_postfix 
+    strb r5, [r2, r3] //append operands and decimals to postfix 
+    add r3, r3, #1 
+    add r9, r9, #1 
+    b read_exp 
+
+left_parenthesis: 
+    //load first element of stack into r2
+    pop {r2}
+    push {r2} 
+
+    ldr r4, addr_of_right 
+    ldr r4, [r4]
+    //cmp r2, r4 //if the top element is ")", print error
+    //beq err_missing_operator
+
+    push {r5} //else, just push "(" to stack
+    b read_exp
+
+right_parenthesis: 
+    //if stack is empty, a "(" is missing
+    pop {r2} 
+    push {r2}	
+
+    //cmp r2, r10 //comparing to null char to check if stack is empty 
+    //beq err_missing_parenthesis 
+
+    ldr r4, addr_of_left 
+    ldr r4, [r4] 
+    cmp r2, r4 //discard "("
+    popeq {r4} 
+    b read_exp 
+
+    pop {r4} //in other cases, pop the operands left in the stack
+    ldr r2, addr_of_postfix
+    strb r4, [r2, r3] 
+    add r3, r3, #1 
+    b right_parenthesis //loop until you reach "("
+
+mul_div: //push only if top of stack is "+", "-", "(" or stack is empty 
+    pop {r2} 
+    push {r2}
+	
+    cmp r2, r10 
+    pusheq {r5} 
+    b read_exp 
+
+    ldr r4, addr_of_add 
+    ldr r4, [r4] 
+    cmp r2, r4 
+    pusheq {r5}  
+    b read_exp 
+
+    ldr r4, addr_of_sub 
+    ldr r4, [r4] 
+    cmp r2, r4 
+    pusheq {r5} 
+    b read_exp 
+
+    ldr r4, addr_of_left 
+    ldr r4, [r4] 
+    cmp r2, r4 
+    pusheq {r5} 
+    b read_exp 
+
+    pop {r4} 
+    push {r5}
+    ldr r2, addr_of_postfix
+    strb r4, [r2, r3] 
+    add r3, r3, #1  
+    b read_exp 
+ 
+add_sub: //push only if stack is empty or top of stack is "(" 
+    pop {r2}
+    push {r2} 	
+
+    cmp r2, r10
+    pusheq {r5}
+    b read_exp 
+
+    ldr r4, addr_of_left 
+    ldr r4, [r4] 
+    cmp r2, r4 
+    pusheq {r5} 
+    b read_exp 
+
+    pop {r4} 
+    push {r5}
+    ldr r2, addr_of_postfix 
+    strb r4, [r2, r3] 
+    add r3, r3, #1 
+    b read_exp 
+
+empty_stack: 
+    pop {r5} //check if top of stack is null 
+    cmp r4, r10 
+    beq append_null //branch to append_null if stack is empty 
+
+    //ldr r4, addr_of_left
+    //ldr r4, [r4]
+    //cmp r5, r4 
+    //beq err_missing_parenthesis
+
+    strb r5, [r2, r3] //append operator to postfix, loop until stack is empty
+    ldr r2, addr_of_postfix
+    add r3, r3, #1 
+    b empty_stack 
+
+append_null: //append null char to postfix  
+    strb r10, [r2, r3] 
+    b print_postfix 
+
+print_postfix: //a test to print postfix
+    ldr r1, addr_of_postfix
+    ldr r0, addr_of_printPattern
+    bl printf
+
+    b end 
+
+//err_missing_operator:
+//err_missing_parenthesis: 
+
+end:
     ldr r0, addr_of_printPattern 
     ldr r1, addr_of_input //used to print out the array, to check if what i read in was correct
     bl printf
@@ -54,14 +263,22 @@ end:
     mov r0, #0 //return 0 for success
     ldr lr, addr_of_return //retrieve lr
     ldr lr, [lr]
-	bx lr 
+        bx lr 
 
 
 
 addr_of_printPattern: .word printPattern
 addr_of_input: .word input
+addr_of_postfix: .word postfix
 addr_of_scan: .word scan
 addr_of_null: .word null
+addr_of_left: .word left 
+addr_of_right: .word right 
+addr_of_exponent: .word exponent 
+addr_of_mul: .word mul 
+addr_of_div: .word div
+addr_of_add: .word add
+addr_of_sub: .word sub 
 addr_of_lengthError: .word lengthError
 addr_of_return: .word return 
 
