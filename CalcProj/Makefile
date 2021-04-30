@@ -1,9 +1,9 @@
 # Makefile
 
-all: a.out
+all: calc
 
-a.out: proj3.S .clean
+calc: proj3.S .clean
 	arm-linux-gnueabi-gcc $< -o $@ -ggdb3 -static   
 
 .clean: 
-	rm -f a.out
+	rm -f calc
