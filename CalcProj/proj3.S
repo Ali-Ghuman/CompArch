@@ -228,7 +228,7 @@ add_sub: //push only if stack is empty or top of stack is "("
 
 empty_stack: 
     pop {r5} //check if top of stack is null 
-    cmp r4, r10 
+    cmp r5, r10 
     beq append_null //branch to append_null if stack is empty 
 
     //ldr r4, addr_of_left
