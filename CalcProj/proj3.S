@@ -81,7 +81,6 @@ initialize_postfix:
     mov r3, #0 //index of postfix 
 
     push {r10}//push null onto stack as a marker for checking when the stack is empty 
-    pop {r2} 
 
     b read_exp 
 
@@ -161,10 +160,12 @@ right_parenthesis:
     //beq err_missing_parenthesis 
 
     ldr r4, addr_of_left 
-    ldr r4, [r4] 
+    ldr r4, [r4]
+    mov r11, r4  
     cmp r2, r4 //discard "("
     popeq {r4} 
-    b read_exp 
+    cmp r2, r11
+    beq read_exp 
 
     pop {r4} //in other cases, pop the operands left in the stack
     ldr r2, addr_of_postfix
@@ -177,26 +178,31 @@ mul_div: //push only if top of stack is "+", "-", "(" or stack is empty
     push {r2}
 	
     cmp r2, r10 
-    pusheq {r5} 
-    b read_exp 
+    pusheq {r5}
+    cmp r2, r10 
+    beq read_exp 
 
     ldr r4, addr_of_add 
     ldr r4, [r4] 
     cmp r2, r4 
-    pusheq {r5}  
-    b read_exp 
+    pusheq {r5}
+    cmp r2, r4  
+    beq read_exp 
 
     ldr r4, addr_of_sub 
     ldr r4, [r4] 
     cmp r2, r4 
-    pusheq {r5} 
-    b read_exp 
+    pusheq {r5}
+    cmp r2, r4 
+    beq read_exp 
 
     ldr r4, addr_of_left 
-    ldr r4, [r4] 
+    ldr r4, [r4]
+    mov r11, r4 
     cmp r2, r4 
     pusheq {r5} 
-    b read_exp 
+    cmp r2, r4
+    beq read_exp 
 
     pop {r4} 
     push {r5}
@@ -211,13 +217,15 @@ add_sub: //push only if stack is empty or top of stack is "("
 
     cmp r2, r10
     pusheq {r5}
-    b read_exp 
+    cmp r2, r10
+    beq read_exp 
 
     ldr r4, addr_of_left 
     ldr r4, [r4] 
     cmp r2, r4 
-    pusheq {r5} 
-    b read_exp 
+    pusheq {r5}
+    cmp r2, r4 
+    beq read_exp 
 
     pop {r4} 
     push {r5}
@@ -235,9 +243,9 @@ empty_stack:
     //ldr r4, [r4]
     //cmp r5, r4 
     //beq err_missing_parenthesis
-
-    strb r5, [r2, r3] //append operator to postfix, loop until stack is empty
+ 
     ldr r2, addr_of_postfix
+    strb r5, [r2, r3] //append operator to postfix, loop until stack is empty
     add r3, r3, #1 
     b empty_stack 
 
