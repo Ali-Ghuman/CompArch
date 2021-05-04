@@ -103,10 +103,12 @@ read_exp:
 
     //check if char is a carrot (for exponent) 
     ldr r4, addr_of_exponent 
-    ldr r4, [r4] 
+    ldr r4, [r4]
+    mov r11, r4
     cmp r5, r4 
-    pusheq {r5} //always push the carrot  
-    b read_exp 
+    pusheq {r5} //always push the carrot
+    cmp r5, r11
+    beq read_exp 
 
     //check if char is "*" (for multiplication) 
     ldr r4, addr_of_mul 
