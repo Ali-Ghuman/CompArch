@@ -235,10 +235,10 @@ add_sub: //push only if stack is empty or top of stack is "("
     pop {r2}
     push {r2} 	
     
-    add r9, r9, #1
-
     cmp r2, r10
     pusheq {r5}
+    cmp r2, r10 
+    addeq r9, r9, #1
     cmp r2, r10
     beq read_exp 
 
@@ -247,14 +247,15 @@ add_sub: //push only if stack is empty or top of stack is "("
     cmp r2, r3 
     pusheq {r5}
     cmp r2, r3 
+    addeq r9, r9, #1
+    cmp r2, r3 
     beq read_exp 
 
-    pop {r3} 
-    push {r5}
+    pop {r3}
     ldr r2, addr_of_postfix 
     strb r3, [r2, r4] 
     add r4, r4, #1 
-    b read_exp 
+    b add_sub 
 
 empty_stack: 
     pop {r5} //check if top of stack is null
