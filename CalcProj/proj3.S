@@ -109,15 +109,9 @@ read_exp:
     //check if char is a carrot (for exponent) 
     ldr r3, addr_of_exponent 
     ldr r3, [r3]
-    mov r6, r3
-    
     cmp r5, r3 
     pusheq {r5} //always push the carrot
-    
-    cmp r5, r6
     addeq r9, r9, #1
-
-    cmp r5, r6
     beq read_exp 
 
     //check if char is "*" (for multiplication) 
@@ -150,7 +144,6 @@ read_exp:
     add r9, r9, #1 
     
 
-
     b read_exp 
 
 left_parenthesis: 
@@ -171,7 +164,6 @@ right_parenthesis:
     cmp r2, r10 //comparing to null char to check if stack is empty 
     beq err_missing_parenthesis 
     
-
     ldr r3, addr_of_left 
     ldr r3, [r3]
     mov r6, r3  
@@ -180,8 +172,6 @@ right_parenthesis:
 
     cmp r2, r6
     addeq r9, r9, #1 
-    
-    cmp r2, r6
     beq read_exp
     
 
@@ -199,21 +189,18 @@ mul_div: //push only if top of stack is "+", "-", "(" or stack is empty
 
     cmp r2, r10 
     pusheq {r5}
-    cmp r2, r10 
     beq read_exp 
 
     ldr r3, addr_of_add 
     ldr r3, [r3] 
     cmp r2, r3 
     pusheq {r5}
-    cmp r2, r3  
     beq read_exp 
 
     ldr r3, addr_of_sub 
     ldr r3, [r3] 
     cmp r2, r3 
     pusheq {r5}
-    cmp r2, r3 
     beq read_exp 
 
     ldr r3, addr_of_left 
@@ -237,18 +224,14 @@ add_sub: //push only if stack is empty or top of stack is "("
     
     cmp r2, r10
     pusheq {r5}
-    cmp r2, r10 
     addeq r9, r9, #1
-    cmp r2, r10
     beq read_exp 
 
     ldr r3, addr_of_left 
     ldr r3, [r3] 
     cmp r2, r3 
     pusheq {r5}
-    cmp r2, r3 
     addeq r9, r9, #1
-    cmp r2, r3 
     beq read_exp 
 
     pop {r3}
