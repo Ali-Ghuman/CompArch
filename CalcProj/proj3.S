@@ -1,7 +1,7 @@
 .data 
 
 .balign 4
-    scan: .asciz "%c" //for reading in input
+    scan: .asciz "%c\n" //for reading in input
 
 .balign 4
     lengthError: .asciz "ERROR: *Input length limit exceeded*\n" //error for later on i guess
@@ -15,8 +15,17 @@
 .balign 1
     input: .skip 19 //used 50 here for now
 
+.balign 8
+    temp: .skip 1
+
 .balign 1 
     postfix: .skip 19 // 19 is the max number of chars, including any possible decimal points
+
+.balign 4
+    idx: .skip 4 
+
+.balign 4
+    scanPattern: .asciz "%lf%n"
 
 .balign 4
     null: .asciz "\0"
@@ -48,6 +57,15 @@
 .balign 4
     return: .word 0 //used to save and retrieve lr 
 
+.balign 4
+    testPattern1: .asciz "%lf\n"    
+
+.balign 4
+    testPattern2: .asciz "%d\n"
+
+.balign 8
+    converted: .skip 152
+
 .text
 
 .global main
@@ -74,12 +92,96 @@ loop: //store into array
     ldrb r9, [r6, r5]  //r9 = argv[r5]
     strb r9, [r8, r5]  //input[r5] = r9
     cmp r9, r10 //if null, end
-    beq initialize_postfix  
+    beq initialize_float  
     
     add r5, r5, #1 //update iterator
     b loop
 
 //Converting from infix to postfix
+
+initialize_float: 
+    mov r4, #0 //r4 = n    
+    mov r9, #0 
+
+    ldr r6, addr_of_idx
+    str r4, [r6]
+    
+    b float
+
+load_char:
+
+    ldr r0, addr_of_converted
+    ldr r1, addr_of_input
+
+    ldr r1, [r1, r4]
+    str r1, [r0,r9]
+    
+    ldr r6, addr_of_idx
+    ldr r6, [r6]
+    add r4, r4, r6
+
+    mov r10, #8
+    mul r0, r6, r10
+    add r9, r9, r0
+    
+    b float
+
+float: 
+    //still need ot check for starting with paranthesis
+    cmp r4, r5 
+    bge end
+
+    ldr r0, addr_of_input
+    add r0, r0, r4
+    ldr r1, addr_of_scanPattern
+    ldr r2, addr_of_converted
+    ldr r3, addr_of_idx
+    
+    bl sscanf
+
+    cmp r0, #0
+    beq load_char
+    //addeq r9, r9, #8
+    //beq float
+    
+    //mov r1, r0
+    //ldr r0, addr_of_testPattern2
+    //bl printf
+    
+    ldr r0, addr_of_testPattern1
+    ldr r6, addr_of_converted
+    ldmia r6, {r2-r3}
+    bl printf
+
+    //ldr r0, addr_of_testPattern2
+    //mov r1, r4
+    //bl printf
+    
+    //ldr r0, addr_of_testPattern2
+    //ldr r1, addr_of_idx
+    //ldr r1, [r1]
+    //bl printf
+    
+    ldr r0, addr_of_converted
+    ldr r1, addr_of_input
+
+    ldr r1, [r1, r4]
+    str r1, [r0,r9]
+    
+   // ldr r0, addr_of_testPattern2
+   // mov r1, r4
+   // bl printf
+     
+    ldr r6, addr_of_idx
+    ldr r6, [r6]
+    add r4, r4, r6 
+
+    mov r10, #8
+    mul r0, r6, r10
+    add r9, r9, r0
+
+    b float    
+
 
 initialize_postfix:
     mov r9, #0 //index of infix
@@ -279,11 +381,13 @@ err_missing_parenthesis:
     bl printf
 
     b end
- 
+
 
 end:
-    ldr r0, addr_of_printPattern 
-    ldr r1, addr_of_input //used to print out the array, to check if what i read in was correct
+    ldr r0, addr_of_scan 
+    ldr r1, addr_of_converted //used to print out the array, to check if what i read in was correct
+    ldr r1, [r1, #8]
+
     bl printf
 
     mov r0, #0 //return 0 for success
@@ -309,7 +413,13 @@ addr_of_lengthError: .word lengthError
 addr_of_parError: .word parError
 addr_of_missOp: .word missOp
 addr_of_return: .word return 
+addr_of_idx: .word idx
+addr_of_scanPattern: .word scanPattern
+addr_of_testPattern1: .word testPattern1
+addr_of_testPattern2: .word testPattern2
+addr_of_converted: .word converted
+addr_of_temp: .word temp
 
 .global printf
 .global scanf
-
+.global sscanf
