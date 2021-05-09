@@ -19,8 +19,8 @@
 .balign 8
     temp: .skip 1
 
-.balign 1 
-    postfix: .skip 19 // 19 is the max number of chars, including any possible decimal points
+.balign 8 
+    postfix: .skip 152 // 19 is the max number of chars, including any possible decimal points
 
 .balign 1
     idx: .skip 4 
@@ -38,7 +38,7 @@
     return: .word 0 //used to save and retrieve lr 
 
 .balign 4
-    testPattern1: .asciz "%lf\n"    
+    testPattern1: .asciz "%0.4lf\n"    
 
 .balign 4
     testPattern2: .asciz "%d\n"
@@ -143,6 +143,9 @@ float:
     ldr r1, addr_of_temp
     ldmia r1, {r2-r3}
     stmia r0, {r2-r3}   
+    
+    //vldr.f64 d0, [r1]
+    //vstr.f64 d0, [r0]
 
     //ldr r0, addr_of_testPattern1
     //ldr r6, addr_of_operands
@@ -198,7 +201,7 @@ initialize_check:
 
 check:
     cmp r9, r5
-    bge end
+    bge initialize_postfix
 
     ldr r6, addr_of_operands
     ldrb r6, [r6, r9]
@@ -224,6 +227,10 @@ check:
     ldr r0, addr_of_testPattern1
     bl printf
     
+    vmov d0, r2, r3
+     
+
+
     add r9, r9, #8
 
     b check
@@ -237,55 +244,217 @@ printc:
 
     b check
 
-//initialize_postfix:
-//    mov r3, r9
-//
-//    mov r9, #0 //index of infix
-//    mov r4, #0 //index of postfix 
-//    
-//    ldr r8, addr_of_operands
-//        
-//    ldr r10, addr_of_null
-//    ldr r10, [r10]    
-//    push {r10}//push null onto stack as a marker for checking when the stack is empty 
-//    b read_exp 
-//
-//read_exp:
-//    cmp r9, r3
-//    beq empty_stack
-//
-//    add r8, r8, r9
-//    ldr r5, [r8, r9] //load the next element from infix
-//    cmp r5, r10 //if it is the null char, go to empty_stack 
-//    beq empty_stack
-//
-//    //check if char is a left parenthesis 
-//    ldr r3, addr_of_left 
-//    ldr r3, [r3] //load left parenthesiss char into r4
-//    cmp r5, r3
-//    beq left_parenthesis//branch to left_parenthesis if comparison is equal
-//
-//    //check if char is a right parenthesis 
-//    ldr r3, addr_of_right 
-//    ldr r3, [r3] //overwrite r4 with the new char we are checking 
-//    cmp r5, r3 
-//    beq right_parenthesis//(right_parenthesis) 
-//
-//    //check if char is a carrot (for exponent) 
-//    ldr r3, addr_ofhusam.almanakly@comparch:~/public_html/CompArch/CalcProj$ exit
-//    add r4, r4, #1 
-//    add r9, r9, #1 
+initialize_postfix:
+    mov r3, r9
 
+    mov r9, #0 //index of infix
+    mov r4, #0 //index of postfix 
+    
+    ldr r8, addr_of_operands
+        
+    ldr r10, addr_of_null
+    ldr r10, [r10]    
+    push {r10}//push null onto stack as a marker for checking when the stack is empty 
+    b read_exp 
+
+read_exp:
+    add r8, r8, r9
+    ldrb r5, [r8] //load the next element from infix
+    //cmp r5, r10 //if it is the null char, go to empty_stack 
+     
+    cmp r3, r9
+    beq empty_stack
+
+    //check if char is a left parenthesis 
+    cmp r5, #'('
+    beq left_parenthesis//branch to left_parenthesis if comparison is equal
+
+    //check if char is a right parenthesis 
+    cmp r5, #')' 
+    beq right_parenthesis//(right_parenthesis) 
+    
+    //check if char is a carrot (for exponent) 
+    cmp r5, #'^' 
+    pusheq {r5} //always push the carrot
+    addeq r9, r9, #8
+    beq read_exp 
+
+    //check if char is "*" (for multiplication) 
+    cmp r5, #'*' 
+    beq mul_div
+
+    //check if char is "/" ( division) 
+    cmp r5, #'/' 
+    beq mul_div //for "*" and "/", branch to mul_div (same precendence)
+    
+    //check if char is "+" (addition) 
+    cmp r5, #'+' 
+    beq add_sub
+      
+    //check if char is "-" (subtraction) 
+    cmp r5, #'-'
+    beq add_sub //addition and subtraction have the same precendence 
+    
+    //has to change
+    ldr r2, addr_of_postfix 
+    add r2, r2, r4
+    vldr.f64 d0, [r8]
+    vstr.f64 d0, [r2]
+    //strb r5, [r2, r4] //append operands and decimals to postfix 
+    
+    add r4, r4, #8 
+    add r9, r9, #8 
+
+    b read_exp 
+
+left_parenthesis: 
+    //load first element of stack into r2
+    pop {r2}
+    push {r2} 
+    
+    add r9, r9, #1
+    push {r5} //else, just push "(" to stack
+    
+    b read_exp
+
+right_parenthesis: 
+    //if stack is empty, a "(" is missing
+    pop {r2} 
+    push {r2}	
+    
+    cmp r2, r10 //comparing to null char to check if stack is empty 
+    beq err_missing_parenthesis 
+
+    cmp r2, #'(' //discard "("
+    popeq {r3} 
+
+    cmp r2, r6
+    addeq r9, r9, #8 
+
+    cmp r2, r6
+    beq read_exp
+
+
+    pop {r3} //in other cases, pop the operands left in the stack
+    ldr r2, addr_of_postfix
+    strb r3, [r2, r4] 
+    add r4, r4, #8
+    
+    b right_parenthesis //loop until you reach "("
+
+mul_div: //push only if top of stack is "+", "-", "(" or stack is empty 
+    pop {r2} 
+    push {r2}
+	
+    add r9, r9, #8
+
+    cmp r2, r10 
+    pusheq {r5}
+    cmp r2, r10 
+    beq read_exp 
+
+    cmp r2, #'+' 
+    pusheq {r5}
+    cmp r2, r3  
+    beq read_exp 
+
+    cmp r2, #'-' 
+    pusheq {r5}
+    cmp r2, r3 
+    beq read_exp 
+
+    cmp r2, #'(' 
+    pusheq {r5} 
+    beq read_exp 
+
+    pop {r3} 
+    push {r5}
+    
+    ldr r2, addr_of_postfix
+    strb r3, [r2, r4] 
+    add r4, r4, #8 
+    
+    b read_exp 
+ 
+add_sub: //push only if stack is empty or top of stack is "(" 
+    pop {r2}
+    push {r2} 	
+
+    cmp r2, r10
+    pusheq {r5}
+    cmp r2, r10 
+    addeq r9, r9, #8
+    cmp r2, r10
+    beq read_exp 
+
+    cmp r2, #'(' 
+    pusheq {r5}
+    cmp r2, r3 
+    addeq r9, r9, #8
+    cmp r2, r3 
+    beq read_exp 
+
+    pop {r3}
+    ldr r2, addr_of_postfix 
+    strb r3, [r2, r4] 
+    add r4, r4, #8 
+    
+    //ldr r10, addr_of_operands
+    //add r10, r3, r9
+    //ldmia r10, {r2-r3}
+    //stmia r2, {r2-r3} 
+    
+    b add_sub 
+
+empty_stack: 
+    pop {r5} //check if top of stack is null
+    
+    cmp r5, r10 
+    beq append_null //branch to append_null if stack is empty 
+    
+    cmp r5, #'('
+    beq err_missing_parenthesis
+     
+    ldr r2, addr_of_postfix
+    strb r5, [r2, r4] //append operator to postfix, loop until stack is empty
+    add r4, r4, #8 
+    
+    b empty_stack 
+
+append_null: //append null char to postfix  
+    ldr r2, addr_of_postfix
+    strb r10, [r2, r4] 
+    
+    b end 
+
+//print_postfix: //a test to print postfix
+    //ldr r1, addr_of_postfix
+    //ldr r0, addr_of_printPattern
+    //bl printf
+    
+  //  b check
+
+err_missing_operator:
+    ldr r0, addr_of_missOp
+    bl printf
+    
+    b end
+
+err_missing_parenthesis:
+    ldr r0, addr_of_parError
+    bl printf
+   
+    b end
 
 end:
     //might be a trailing zero or something
     //ldr r0, addr_of_scan
     ldr r0, addr_of_testPattern1
-    ldr r10, addr_of_operands//used to print out the array, to check if what i read in was correct
-    //ldr r1, [r10, #16]
-    add r10, r10, #24
+    ldr r10, addr_of_postfix//used to print out the array, to check if what i read in was correct
+    //ldr r1, [r10, #0]
+    add r10, r10, #8
     ldmia r10, {r2-r3}
-    //bl printf
+    bl printf
 
     //ldr r0, addr_of_testPattern1
     //ldr r1, addr_of_converted
