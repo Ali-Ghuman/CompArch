@@ -94,15 +94,6 @@ float:
     ldr r6, addr_of_input
     ldrb r6, [r6, r4]
     
-    //ldr r0, addr_of_testPattern2
-    //mov r1, r9
-    //bl printf
-
-    //ldr r0, addr_of_testPattern2
-    //mov r1, r4
-    //bl printf
-
-
     ldr r0, addr_of_input
     add r0, r0, r4
     ldr r1, addr_of_scanPattern
@@ -125,48 +116,22 @@ float:
     cmp r6, #'^'
     beq load_op
     
-    //ldr r0, addr_of_input
-    //add r0, r0, r4
-    //ldr r1, addr_of_scanPattern
-    //ldr r2, addr_of_temp
-    //ldr r3, addr_of_idx
-    //bl sscanf
-    
     //load temp into operands 
     ldr r0, addr_of_operands
     add r0, r0, r9
     ldr r1, addr_of_temp
     ldmia r1, {r2-r3}
     stmia r0, {r2-r3}   
-    
-    //vldr.f64 d0, [r1]
-    //vstr.f64 d0, [r0]
-
-    //ldr r0, addr_of_testPattern1
-    //ldr r6, addr_of_operands
-    //add r6, r6, r9
-    //ldmia r6, {r2-r3}
-    //bl printf
      
     ldr r6, addr_of_idx
     ldr r6, [r6]
     add r4, r4, r6 
 
-    //mov r10, #8
-    //mul r0, r6, r10
     add r9, r9, #8
 
     b float
 
 load_op:
-
-    //ldr r6, addr_of_idx
-    //ldr r6, [r6]
-    //add r4, r4, r6
-
-    //mov r10, #8
-    //mul r0, r6, r10
-    //add r9, r9, r0
     
     ldr r0, addr_of_operands
     ldr r1, addr_of_input
@@ -181,11 +146,6 @@ load_op:
     mul r0, r6, r10
     add r9, r9, #8
 
-    //ldr r0, addr_of_scan
-    //ldr r1, addr_of_operands
-    //ldr r1, [r1, r9]
-    //bl printf
-
     b float
 
 initialize_check: 
@@ -196,11 +156,9 @@ initialize_check:
 
 check:
     cmp r9, r5
-    //bge initialize_postfix
     bge end
 
     ldr r6, addr_of_postfix
-    //ldr r6, addr_of_operands
     ldrb r6, [r6, r9]
 
     cmp r6, #'+'
@@ -244,19 +202,12 @@ printc:
 
 initialize_postfix:
     
-    //ldr r11, addr_of_null
-    //ldr r11, [r11]
-    //
-    //ldr r1, addr_of_operands
-    //add r1, r1, r9
-    //strb r11, [r1]
-    
-    //add r9, r9, #8
     mov r11, r9
     
     mov r9, #0 //index of infix
     mov r4, #0 //index of postfix 
-    
+    mov r6, #0 // number of paranthesis
+
     ldr r8, addr_of_operands
         
     ldr r10, addr_of_null
@@ -269,18 +220,18 @@ read_exp:
     ldr r8, addr_of_operands
     add r8, r8, r9
     ldrb r5, [r8] //load the next element from infix
-    //cmp r5, r10 //if it is the null char, go to empty_stack 
     
     cmp r11, r9
     beq empty_stack
     
-    
     //check if char is a left parenthesis 
     cmp r5, #'('
+    addeq r6, r6, #8
     beq left_parenthesis//branch to left_parenthesis if comparison is equal
 
     //check if char is a right parenthesis 
     cmp r5, #')' 
+    addeq r6, r6, #8
     beq right_parenthesis//(right_parenthesis) 
     
     //check if char is a carrot (for exponent) 
@@ -312,12 +263,6 @@ read_exp:
     vldr.f64 d0, [r8]
     vstr.f64 d0, [r2]
     
-    //strb r5, [r2, r4] //append operands and decimals to postfix 
-    
-    //vmov r2, r3, d0
-    //ldr r0, addr_of_testPattern1
-    //bl printf
-
     add r4, r4, #8 
     add r9, r9, #8 
 
@@ -405,18 +350,13 @@ add_sub: //push only if stack is empty or top of stack is "("
     strb r3, [r2] 
     add r4, r4, #8 
     
-    //ldr r10, addr_of_operands
-    //add r10, r3, r9
-    //ldmia r10, {r2-r3}
-    //stmia r2, {r2-r3} 
-    
     b add_sub 
 
 empty_stack: 
     pop {r5} //check if top of stack is null
     
     cmp r5, r10 
-    beq append_null //branch to append_null if stack is empty 
+    beq subPar //branch to append_null if stack is empty 
     
     cmp r5, #'('
     beq err_missing_parenthesis
@@ -427,20 +367,9 @@ empty_stack:
     
     b empty_stack 
 
-append_null: //append null char to postfix  
-    //mov r5, r4
-    //ldr r2, addr_of_postfix
-    //strb r10, [r2, r4] 
-     
-    b initialize_check 
-
-//print_postfix: //a test to print postfix
-    //ldr r1, addr_of_postfix
-    //ldr r0, addr_of_printPattern
-    //bl printf
-    
-  //  b check
-
+subPar: 
+    sub r9, r9, r6
+    b initialize_check
 
 err_missing_parenthesis:
     ldr r0, addr_of_parError
@@ -456,10 +385,6 @@ end:
     //ldr r1, [r10, #8]
     add r10, r10, #8
     ldmia r10, {r2-r3}
-    //bl printf
-
-    //ldr r0, addr_of_testPattern1
-    //ldr r1, addr_of_converted
     //bl printf
 
     mov r0, #0 //return 0 for success
