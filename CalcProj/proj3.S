@@ -43,6 +43,9 @@
 .balign 8
     operands: .skip 152
 
+.balign 4
+    firstMessage: .asciz "You entered the following expression: "
+
 .text
 
 .global main
@@ -52,7 +55,7 @@ main:
     str lr, [r7]
 
     ldr r6, [r1, #4] //pointer to first char of argv into r6
-
+    
     ldr r0, addr_of_printPattern //check to make sure what you're reading in 
     ldr r1, [r1, #4]
     bl printf
@@ -148,57 +151,59 @@ load_op:
 
     b float
 
-initialize_check: 
-    mov r5, r9
-    mov r9, #0    
+//Block of code to print arrays
 
-    b check
-
-check:
-    cmp r9, r5
-    bge initialize_evaluate
-
-    ldr r6, addr_of_postfix
-    ldrb r6, [r6, r9]
-
-    cmp r6, #'+'
-    beq printc
-    cmp r6, #'-'
-    beq printc
-    cmp r6, #'/'
-    beq printc
-    cmp r6, #'*'
-    beq printc
-    cmp r6, #'('
-    beq printc
-    cmp r6, #')'
-    beq printc
-    cmp r6, #'^'
-    beq printc
-
-    //ldr r10, addr_of_operands
-    ldr r10, addr_of_postfix
-    add r10, r10, r9
-    ldmia r10, {r2-r3}
-    ldr r0, addr_of_testPattern1
-    bl printf
-    
-    vmov d0, r2, r3
-     
-
-
-    add r9, r9, #8
-
-    b check
-
-printc: 
-    mov r1, r6
-    ldr r0, addr_of_scan
-    bl printf
-    
-    add r9, r9, #8
-
-    b check
+//initialize_check: 
+//    mov r5, r9
+//    mov r9, #0    
+//
+//    b check
+//
+//check:
+//    cmp r9, r5
+//    bge initialize_evaluate
+//
+//    ldr r6, addr_of_postfix
+//    ldrb r6, [r6, r9]
+//
+//    cmp r6, #'+'
+//    beq printc
+//    cmp r6, #'-'
+//    beq printc
+//    cmp r6, #'/'
+//    beq printc
+//    cmp r6, #'*'
+//    beq printc
+//    cmp r6, #'('
+//    beq printc
+//    cmp r6, #')'
+//    beq printc
+//    cmp r6, #'^'
+//    beq printc
+//
+//    //ldr r10, addr_of_operands
+//    ldr r10, addr_of_postfix
+//    add r10, r10, r9
+//    ldmia r10, {r2-r3}
+//    ldr r0, addr_of_testPattern1
+//    bl printf
+//    
+//    vmov d0, r2, r3
+//     
+//
+//
+//    add r9, r9, #8
+//
+//    b check
+//
+//printc: 
+//    mov r1, r6
+//    ldr r0, addr_of_scan
+//    bl printf
+//    
+//    add r9, r9, #8
+//
+//    b check
 
 initialize_postfix:
     
@@ -290,7 +295,6 @@ right_parenthesis:
     popeq {r3} 
     addeq r9, r9, #8 
     beq read_exp
-    
 
     pop {r3} //in other cases, pop the operators left in the stack
     ldr r2, addr_of_postfix
@@ -357,7 +361,7 @@ empty_stack:
     
     cmp r5, r10 
     subeq r9, r9, r6
-    beq initialize_check //branch to append_null if stack is empty 
+    beq initialize_evaluate //branch to append_null if stack is empty 
     
     cmp r5, #'('
     beq err_missing_parenthesis
@@ -388,8 +392,6 @@ initialize_evaluate:
 evaluate:
     cmp r9, r11
     beq end
-    
-    //dont check for empty stack? 
 
     ldr r2, addr_of_postfix 
     ldrb r5, [r2, r9]
@@ -423,12 +425,6 @@ evaluate:
     b evaluate
 
 power: 
-    //pop {r0}
-    //push {r0}
-
-    //cmp r0, r10
-    //beq end //syntax error branch
-
     vpop {d1}  //might have gotten the order wrong
     vpop {d0}
 
@@ -444,12 +440,6 @@ power:
     b evaluate
 
 multiply:
-    //pop {r0}
-    //push {r0}
-
-    //cmp r0, r10
-    //beq end
-
     vpop {d1}
     vpop {d2}
     vmul.f64 d0, d1, d2
@@ -461,12 +451,6 @@ multiply:
     b evaluate 
 
 divide: 
-    //pop {r0}
-    //push {r0}
-
-    //cmp r0, r10
-    //beq end
-
     vpop {d1}
     vpop {d2}
     vdiv.f64 d0, d2, d1
@@ -478,12 +462,6 @@ divide:
     b evaluate 
 
 add: 
-    //pop {r0}
-    //push {r0}
-
-    //cmp r0, r10
-    //beq end
-
     vpop {d1}
     vpop {d2}
     vadd.f64 d0, d2, d1
@@ -495,12 +473,6 @@ add:
     b evaluate 
 
 subtract: 
-    //pop {r0}
-    //push {r0}
-
-    //cmp r0, r10
-    //beq end
-
     vpop {d1}
     vpop {d2}
     vsub.f64 d0, d2, d1
@@ -514,7 +486,6 @@ subtract:
 
 end:
     //might be a trailing zero or something
-    //ldr r0, addr_of_scan
     vpop {d0}
     vmov r2, r3, d0
     ldr r0, addr_of_testPattern1
@@ -540,6 +511,7 @@ addr_of_testPattern1: .word testPattern1
 addr_of_testPattern2: .word testPattern2
 addr_of_operands: .word operands
 addr_of_temp: .word temp
+addr_of_firstMessage: .word firstMessage
 
 .global printf
 .global scanf
