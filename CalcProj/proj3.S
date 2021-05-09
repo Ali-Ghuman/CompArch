@@ -10,9 +10,6 @@
 .balign 4
     parError: .asciz "ERROR: *Paranthesis Syntax*\n"
 
-.balign 4
-    missOp: .asciz "ERROR: *Missing Operator*\n"
-
 .balign 1
     input: .skip 19 //used 50 here for now
 
@@ -45,9 +42,6 @@
 
 .balign 8
     operands: .skip 152
-
-.balign 1
-    operators: .skip 20
 
 .text
 
@@ -94,8 +88,9 @@ initialize_float:
 float: 
     //still need ot check for starting with paranthesis
     cmp r4, r5 
-    bge initialize_check //process 2 branch 
-
+    bge initialize_postfix 
+    //bge initialize_check
+    
     ldr r6, addr_of_input
     ldrb r6, [r6, r4]
     
@@ -201,9 +196,11 @@ initialize_check:
 
 check:
     cmp r9, r5
-    bge initialize_postfix
+    //bge initialize_postfix
+    bge end
 
-    ldr r6, addr_of_operands
+    ldr r6, addr_of_postfix
+    //ldr r6, addr_of_operands
     ldrb r6, [r6, r9]
 
     cmp r6, #'+'
@@ -221,7 +218,8 @@ check:
     cmp r6, #'^'
     beq printc
 
-    ldr r10, addr_of_operands
+    //ldr r10, addr_of_operands
+    ldr r10, addr_of_postfix
     add r10, r10, r9
     ldmia r10, {r2-r3}
     ldr r0, addr_of_testPattern1
@@ -245,8 +243,17 @@ printc:
     b check
 
 initialize_postfix:
-    mov r3, r9
-
+    
+    //ldr r11, addr_of_null
+    //ldr r11, [r11]
+    //
+    //ldr r1, addr_of_operands
+    //add r1, r1, r9
+    //strb r11, [r1]
+    
+    //add r9, r9, #8
+    mov r11, r9
+    
     mov r9, #0 //index of infix
     mov r4, #0 //index of postfix 
     
@@ -255,16 +262,19 @@ initialize_postfix:
     ldr r10, addr_of_null
     ldr r10, [r10]    
     push {r10}//push null onto stack as a marker for checking when the stack is empty 
+
     b read_exp 
 
 read_exp:
+    ldr r8, addr_of_operands
     add r8, r8, r9
     ldrb r5, [r8] //load the next element from infix
     //cmp r5, r10 //if it is the null char, go to empty_stack 
-     
-    cmp r3, r9
+    
+    cmp r11, r9
     beq empty_stack
-
+    
+    
     //check if char is a left parenthesis 
     cmp r5, #'('
     beq left_parenthesis//branch to left_parenthesis if comparison is equal
@@ -295,13 +305,19 @@ read_exp:
     cmp r5, #'-'
     beq add_sub //addition and subtraction have the same precendence 
     
-    //has to change
+    ldr r8, addr_of_operands
+    add r8, r8, r9
     ldr r2, addr_of_postfix 
     add r2, r2, r4
     vldr.f64 d0, [r8]
     vstr.f64 d0, [r2]
+    
     //strb r5, [r2, r4] //append operands and decimals to postfix 
     
+    //vmov r2, r3, d0
+    //ldr r0, addr_of_testPattern1
+    //bl printf
+
     add r4, r4, #8 
     add r9, r9, #8 
 
@@ -312,7 +328,7 @@ left_parenthesis:
     pop {r2}
     push {r2} 
     
-    add r9, r9, #1
+    add r9, r9, #8
     push {r5} //else, just push "(" to stack
     
     b read_exp
@@ -322,20 +338,16 @@ right_parenthesis:
     pop {r2} 
     push {r2}	
     
-    cmp r2, r10 //comparing to null char to check if stack is empty 
+    cmp r2, r10  //comparing to null char to check if stack is empty 
     beq err_missing_parenthesis 
 
     cmp r2, #'(' //discard "("
     popeq {r3} 
-
-    cmp r2, r6
     addeq r9, r9, #8 
-
-    cmp r2, r6
     beq read_exp
+    
 
-
-    pop {r3} //in other cases, pop the operands left in the stack
+    pop {r3} //in other cases, pop the operators left in the stack
     ldr r2, addr_of_postfix
     strb r3, [r2, r4] 
     add r4, r4, #8
@@ -350,17 +362,14 @@ mul_div: //push only if top of stack is "+", "-", "(" or stack is empty
 
     cmp r2, r10 
     pusheq {r5}
-    cmp r2, r10 
     beq read_exp 
 
     cmp r2, #'+' 
     pusheq {r5}
-    cmp r2, r3  
     beq read_exp 
 
     cmp r2, #'-' 
     pusheq {r5}
-    cmp r2, r3 
     beq read_exp 
 
     cmp r2, #'(' 
@@ -379,24 +388,21 @@ mul_div: //push only if top of stack is "+", "-", "(" or stack is empty
 add_sub: //push only if stack is empty or top of stack is "(" 
     pop {r2}
     push {r2} 	
-
+    
     cmp r2, r10
     pusheq {r5}
-    cmp r2, r10 
     addeq r9, r9, #8
-    cmp r2, r10
     beq read_exp 
 
     cmp r2, #'(' 
     pusheq {r5}
-    cmp r2, r3 
     addeq r9, r9, #8
-    cmp r2, r3 
     beq read_exp 
 
     pop {r3}
     ldr r2, addr_of_postfix 
-    strb r3, [r2, r4] 
+    add r2, r2, r4
+    strb r3, [r2] 
     add r4, r4, #8 
     
     //ldr r10, addr_of_operands
@@ -422,10 +428,11 @@ empty_stack:
     b empty_stack 
 
 append_null: //append null char to postfix  
-    ldr r2, addr_of_postfix
-    strb r10, [r2, r4] 
-    
-    b end 
+    //mov r5, r4
+    //ldr r2, addr_of_postfix
+    //strb r10, [r2, r4] 
+     
+    b initialize_check 
 
 //print_postfix: //a test to print postfix
     //ldr r1, addr_of_postfix
@@ -434,11 +441,6 @@ append_null: //append null char to postfix
     
   //  b check
 
-err_missing_operator:
-    ldr r0, addr_of_missOp
-    bl printf
-    
-    b end
 
 err_missing_parenthesis:
     ldr r0, addr_of_parError
@@ -451,10 +453,10 @@ end:
     //ldr r0, addr_of_scan
     ldr r0, addr_of_testPattern1
     ldr r10, addr_of_postfix//used to print out the array, to check if what i read in was correct
-    //ldr r1, [r10, #0]
+    //ldr r1, [r10, #8]
     add r10, r10, #8
     ldmia r10, {r2-r3}
-    bl printf
+    //bl printf
 
     //ldr r0, addr_of_testPattern1
     //ldr r1, addr_of_converted
@@ -473,7 +475,6 @@ addr_of_scan: .word scan
 addr_of_null: .word null
 addr_of_lengthError: .word lengthError
 addr_of_parError: .word parError
-addr_of_missOp: .word missOp
 addr_of_return: .word return
 addr_of_idx: .word idx
 addr_of_scanPattern: .word scanPattern
@@ -481,7 +482,6 @@ addr_of_testPattern1: .word testPattern1
 addr_of_testPattern2: .word testPattern2
 addr_of_operands: .word operands
 addr_of_temp: .word temp
-addr_of_operators: .word operators
 
 .global printf
 .global scanf
