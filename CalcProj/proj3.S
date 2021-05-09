@@ -156,7 +156,7 @@ initialize_check:
 
 check:
     cmp r9, r5
-    bge end
+    bge initialize_evaluate
 
     ldr r6, addr_of_postfix
     ldrb r6, [r6, r9]
@@ -356,7 +356,8 @@ empty_stack:
     pop {r5} //check if top of stack is null
     
     cmp r5, r10 
-    beq subPar //branch to append_null if stack is empty 
+    subeq r9, r9, r6
+    beq initialize_check //branch to append_null if stack is empty 
     
     cmp r5, #'('
     beq err_missing_parenthesis
@@ -367,25 +368,157 @@ empty_stack:
     
     b empty_stack 
 
-subPar: 
-    sub r9, r9, r6
-    b initialize_check
-
 err_missing_parenthesis:
     ldr r0, addr_of_parError
     bl printf
    
     b end
 
+initialize_evaluate:
+    mov r11, r9
+
+    mov r9, #0
+    
+    ldr r10, addr_of_null
+    ldr r10, [r10]
+    //push {r10}
+
+    b evaluate
+
+evaluate:
+    cmp r9, r11
+    beq end
+    
+    //dont check for empty stack? 
+
+    ldr r2, addr_of_postfix 
+    ldrb r5, [r2, r9]
+
+    //check if char is a carrot (for exponent) 
+    cmp r5, #'^' 
+    beq power 
+
+    //check if char is "*" (for multiplication) 
+    cmp r5, #'*' 
+    beq multiply
+
+    //check if char is "/" ( division) 
+    cmp r5, #'/' 
+    beq divide //for "*" and "/", branch to mul_div (same precendence)
+    
+    //check if char is "+" (addition) 
+    cmp r5, #'+' 
+    beq add
+      
+    //check if char is "-" (subtraction) 
+    cmp r5, #'-'
+    beq subtract //addition and subtraction have the same precendence 
+     
+    ldr r2, addr_of_postfix
+    add r2, r2, r9
+    vldr.f64 d0, [r2]
+    vpush {d0}
+    
+    add r9, r9, #8
+    b evaluate
+
+power: 
+    //pop {r0}
+    //push {r0}
+
+    //cmp r0, r10
+    //beq end //syntax error branch
+
+    vpop {d1}  //might have gotten the order wrong
+    vpop {d0}
+
+    vmov r0, r1, d0
+    vmov r2, r3, d1
+    bl pow
+
+    vmov d0, r0, r1
+    vpush {d0}
+    
+    add r9, r9, #8
+
+    b evaluate
+
+multiply:
+    //pop {r0}
+    //push {r0}
+
+    //cmp r0, r10
+    //beq end
+
+    vpop {d1}
+    vpop {d2}
+    vmul.f64 d0, d1, d2
+    
+    vpush {d0}
+    
+    add r9, r9, #8
+
+    b evaluate 
+
+divide: 
+    //pop {r0}
+    //push {r0}
+
+    //cmp r0, r10
+    //beq end
+
+    vpop {d1}
+    vpop {d2}
+    vdiv.f64 d0, d2, d1
+    
+    vpush {d0}
+    
+    add r9, r9, #8
+
+    b evaluate 
+
+add: 
+    //pop {r0}
+    //push {r0}
+
+    //cmp r0, r10
+    //beq end
+
+    vpop {d1}
+    vpop {d2}
+    vadd.f64 d0, d2, d1
+    
+    vpush {d0}
+     
+    add r9, r9, #8
+
+    b evaluate 
+
+subtract: 
+    //pop {r0}
+    //push {r0}
+
+    //cmp r0, r10
+    //beq end
+
+    vpop {d1}
+    vpop {d2}
+    vsub.f64 d0, d2, d1
+    
+    vpush {d0}
+    
+    add r9, r9, #8
+
+    b evaluate 
+    
+
 end:
     //might be a trailing zero or something
     //ldr r0, addr_of_scan
+    vpop {d0}
+    vmov r2, r3, d0
     ldr r0, addr_of_testPattern1
-    ldr r10, addr_of_postfix//used to print out the array, to check if what i read in was correct
-    //ldr r1, [r10, #8]
-    add r10, r10, #8
-    ldmia r10, {r2-r3}
-    //bl printf
+    bl printf
 
     mov r0, #0 //return 0 for success
     ldr lr, addr_of_return //retrieve lr
@@ -411,4 +544,4 @@ addr_of_temp: .word temp
 .global printf
 .global scanf
 .global sscanf
-
+.global pow
