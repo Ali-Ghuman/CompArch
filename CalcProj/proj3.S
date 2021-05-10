@@ -514,6 +514,5 @@ addr_of_temp: .word temp
 addr_of_firstMessage: .word firstMessage
 
 .global printf
-.global scanf
 .global sscanf
 .global pow
