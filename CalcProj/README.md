@@ -13,3 +13,6 @@ would evaluate to 4.2000. If parenthesis are involved in the calculation,
 include quotation marks around the argument. Ie...
  
 ./calc "20/(4+3)"                    
+
+
+Spaces should be omitted between characters in the expression, and the program limits input to 19 characters.
