@@ -11,7 +11,7 @@
     parError: .asciz "ERROR: *Parenthesis Syntax*\n"
 
 .balign 1
-    input: .skip 19 //used 50 here for now
+    input: .skip 50 //used 50 here for now
 
 .balign 8
     temp: .skip 1
