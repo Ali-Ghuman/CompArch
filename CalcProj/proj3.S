@@ -8,7 +8,7 @@
     lengthError: .asciz "ERROR: *Input length limit exceeded*\n" //error for later on i guess
 
 .balign 4
-    parError: .asciz "ERROR: *Paranthesis Syntax*\n"
+    parError: .asciz "ERROR: *Parenthesis Syntax*\n"
 
 .balign 1
     input: .skip 19 //used 50 here for now
