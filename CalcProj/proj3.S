@@ -274,10 +274,6 @@ read_exp:
     b read_exp 
 
 left_parenthesis: 
-    //load first element of stack into r2
-    pop {r2}
-    push {r2} 
-    
     add r9, r9, #8
     push {r5} //else, just push "(" to stack
     
@@ -285,7 +281,7 @@ left_parenthesis:
 
 right_parenthesis: 
     //if stack is empty, a "(" is missing
-    pop {r2} 
+    pop {r2} //load first element on stack into r2 without changing what's on the stack
     push {r2}	
     
     cmp r2, r10  //comparing to null char to check if stack is empty 
